@@ -2,6 +2,10 @@ import os
 import pygame
 import time
 import random
+WIDTH, HEIGHT = 750, 750
+SCREEN_DIMENSION = (WIDTH, HEIGHT)
+
+WIN = pygame.display.set_mode(SCREEN_DIMENSION)
 
 assets_location = os.path
 
