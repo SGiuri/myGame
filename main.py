@@ -1,16 +1,18 @@
-# This is a sample Python script.
+import os
+import pygame
+import time
+import random
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+assets_location = os.path
 
+BG = pygame.image.load(assets_location.join("assets", 'background-black.png'))
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+BLU_LASER = pygame.image.load(assets_location.join("assets", 'pixel_laser_blue.png'))
+GREEN_LASER = pygame.image.load(assets_location.join("assets", 'pixel_laser_green.png'))
+RED_LASER = pygame.image.load(assets_location.join("assets", 'pixel_laser_red.png'))
+BLUE_SHIP = pygame.image.load(assets_location.join("assets", 'pixel_ship_blue_small.png'))
+GREEN_SHIP = pygame.image.load(assets_location.join("assets", 'pixel_ship_green_small.png'))
+RED_SHIP = pygame.image.load(assets_location.join("assets", 'pixel_ship_red_small.png'))
 
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+YELLOW_LASER = pygame.image.load(assets_location.join("assets", 'pixel_laser_yellow.png'))
+YELLOW_SHIP = pygame.image.load(assets_location.join("assets", 'pixel_ship_yellow.png'))
