@@ -14,12 +14,20 @@ BG = pygame.transform.scale(
     pygame.image.load(
         assets_location.join("assets", 'background-black.png')), (WIDTH, HEIGHT))
 
-BLU_LASER = pygame.image.load(assets_location.join("assets", 'pixel_laser_blue.png'))
-GREEN_LASER = pygame.image.load(assets_location.join("assets", 'pixel_laser_green.png'))
-RED_LASER = pygame.image.load(assets_location.join("assets", 'pixel_laser_red.png'))
 BLUE_SHIP = pygame.image.load(assets_location.join("assets", 'pixel_ship_blue_small.png'))
 GREEN_SHIP = pygame.image.load(assets_location.join("assets", 'pixel_ship_green_small.png'))
 RED_SHIP = pygame.image.load(assets_location.join("assets", 'pixel_ship_red_small.png'))
+
+BLU_LASER = pygame.transform.scale(
+    pygame.image.load(assets_location.join("assets", 'pixel_laser_blue.png')),
+    (BLUE_SHIP.get_width(), BLUE_SHIP.get_height()))
+
+GREEN_LASER = pygame.transform.scale(
+    pygame.image.load(assets_location.join("assets", 'pixel_laser_green.png')),
+    (GREEN_SHIP.get_width(), GREEN_SHIP.get_height()))
+RED_LASER = pygame.transform.scale(
+    pygame.image.load(assets_location.join("assets", 'pixel_laser_red.png')),
+    (RED_SHIP.get_width(), RED_SHIP.get_height()))
 
 YELLOW_LASER = pygame.image.load(assets_location.join("assets", 'pixel_laser_yellow.png'))
 YELLOW_SHIP = pygame.image.load(assets_location.join("assets", 'pixel_ship_yellow.png'))
@@ -32,6 +40,7 @@ class Ship:
         self.x = x
         self.y = y
         self.health = health
+        self.max_health = health
         self.ship_img, self.laser_img = None, None
         self.lasers = []
         self.cool_down_counter = 0
@@ -40,6 +49,7 @@ class Ship:
         window.blit(self.ship_img, (self.x, self.y))
         for laser in self.lasers:
             laser.draw(window)
+        
 
     def get_width(self):
         return self.ship_img.get_width()
@@ -55,7 +65,7 @@ class Ship:
 
     def shoot_laser(self):
         if self.cool_down_counter == 0:
-            laser = Laser(self.x, self.y, self.laser_img, self.get_width())
+            laser = Laser(self.x, self.y, self.laser_img)
             self.lasers.append(laser)
             self.cool_down_counter = 1
 
@@ -68,6 +78,12 @@ class Ship:
             elif laser.collision(obj):
                 obj.health -= 10
                 self.lasers.remove(laser)
+
+    def health_bar(self, window):
+        #pygame.draw.rect(screen, [red, blue, green], [left, top, width, height], filled)
+        pygame.draw.rect(window,(255,0,0), [self.x, self.y +4 + self.get_height(), self.get_width(), 20])
+        pygame.draw.rect(window, (0, 255, 0), [self.x + 2, self.y + 6 + self.get_height(),
+                                               self.health/self.max_health * (self.get_width()-4), 16])
 
 
 class Player(Ship):
@@ -108,13 +124,15 @@ class Enemy(Ship):
         self.y += vel
 
     def shoot(self):
-        if random.randrange(0,120) == 1:
+        if random.randrange(0, 120) == 1:
             self.shoot_laser()
 
 
+
+
 class Laser():
-    def __init__(self, x, y, img, ship_width = 0):
-        self.x = x - ship_width/2
+    def __init__(self, x, y, img, ship_width=0):
+        self.x = x - ship_width / 2
         self.y = y
         self.img = img
         self.mask = pygame.mask.from_surface(self.img)
@@ -126,7 +144,7 @@ class Laser():
         window.blit(self.img, (self.x, self.y))
 
     def off_screen(self, height):
-        return not(self.y < height and self.y > 0)
+        return not (self.y < height and self.y > 0)
 
     def collision(self, obj):
         return collide(self, obj)
@@ -173,15 +191,20 @@ def main():
             enemy.draw(WIN)
 
         player.draw(WIN)
+        player.health_bar(WIN)
 
         pygame.display.update()
 
     while run:
         clock.tick(FPS)
 
-        if lives <= 0 or player_health <= 0:
+        if lives <= 0:
             lost = True
             lost_count += 1
+
+        if player.health <= 0:
+            lives -= 1
+            player.health = player.max_health
 
         if lost:
             if lost_count > FPS * 3:
@@ -198,16 +221,16 @@ def main():
             wave_lenght += 1
             enemy_vel += 0
             for i in range(wave_lenght):
-                enemy = Enemy(random.randrange(10, WIDTH - 10),
+                enemy = Enemy(random.randrange(0, WIDTH - 40),
                               random.randrange(-600, -10),
                               random.choice(["red", "green", "blue"]))
                 enemies.append(enemy)
 
         key = pygame.key.get_pressed()
 
-        if key[pygame.K_LEFT] and player.x - player_vel > 0:
+        if key[pygame.K_LEFT] and player.x - player_vel + player.get_width()//2  > 0:
             player.x -= player_vel
-        if key[pygame.K_RIGHT] and player.x + player_vel + player.get_width() < WIDTH:
+        if key[pygame.K_RIGHT] and player.x + player_vel + player.get_width()//2 < WIDTH:
             player.x += player_vel
         if key[pygame.K_UP] and player.y - player_vel > 0:
             player.y -= player_vel
@@ -224,10 +247,13 @@ def main():
                 enemies.remove(enemy)
                 lives -= 1
 
+            if collide(enemy, player):
+                player.health -= 10
+                enemies.remove(enemy)
+
         enemy.move_lasers(laser_vel, player)
 
         player.move_lasers(-laser_vel, enemies)
-
 
         redraw_window()
 
