@@ -55,7 +55,7 @@ class Ship:
 
     def shoot_laser(self):
         if self.cool_down_counter == 0:
-            laser = Laser(self.x, self.y, self.laser_img)
+            laser = Laser(self.x, self.y, self.laser_img, self.get_width())
             self.lasers.append(laser)
             self.cool_down_counter = 1
 
@@ -107,10 +107,14 @@ class Enemy(Ship):
     def move(self, vel):
         self.y += vel
 
+    def shoot(self):
+        if random.randrange(0,120) == 1:
+            self.shoot_laser()
+
 
 class Laser():
-    def __init__(self, x, y, img):
-        self.x = x
+    def __init__(self, x, y, img, ship_width = 0):
+        self.x = x - ship_width/2
         self.y = y
         self.img = img
         self.mask = pygame.mask.from_surface(self.img)
@@ -122,15 +126,15 @@ class Laser():
         window.blit(self.img, (self.x, self.y))
 
     def off_screen(self, height):
-        return self.y < height and self.y > 0
+        return not(self.y < height and self.y > 0)
 
     def collision(self, obj):
         return collide(self, obj)
 
 
 def collide(obj1, obj2):
-    offset_x = obj2.x - obj1.x
-    offset_y = obj2.y - obj1.y
+    offset_x = int(obj2.x - obj1.x)
+    offset_y = int(obj2.y - obj1.y)
     return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None
 
 
@@ -191,8 +195,8 @@ def main():
 
         if len(enemies) == 0:
             level += 1
-            wave_lenght += 5
-            enemy_vel += 1
+            wave_lenght += 1
+            enemy_vel += 0
             for i in range(wave_lenght):
                 enemy = Enemy(random.randrange(10, WIDTH - 10),
                               random.randrange(-600, -10),
@@ -215,10 +219,16 @@ def main():
         for enemy in enemies:
             enemy.move(enemy_vel)
             enemy.move_lasers(laser_vel, player)
+            enemy.shoot()
             if enemy.y > HEIGHT:
                 enemies.remove(enemy)
                 lives -= 1
+
+        enemy.move_lasers(laser_vel, player)
+
         player.move_lasers(-laser_vel, enemies)
+
+
         redraw_window()
 
 
